@@ -3,7 +3,6 @@ import express, { Request, Response } from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import {
-  Content,
   FunctionCall,
   FunctionDeclaration,
   GoogleGenAI,
@@ -15,6 +14,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const PORT = Number(process.env.PORT) || 3000;
+
+// Tipo local para evitar depender de la exportación de 'Content'
+type ChatMessage = {
+  role: 'user' | 'model' | 'function';
+  parts: Part[];
+};
 
 // Cascada de modelos activos y compatibles con @google/genai >= 2.29.1
 const MODEL_CASCADE = ['gemini-4-hydrogen', 'gemini-3.1-flash-lite'] as const;
@@ -315,7 +320,7 @@ async function startServer() {
         return;
       }
 
-      const sanitizedHistory: Content[] = Array.isArray(history)
+      const sanitizedHistory: ChatMessage[] = Array.isArray(history)
         ? history
             .filter(
               (item) =>
@@ -378,7 +383,7 @@ async function startServer() {
         });
       }
 
-      const contents: Content[] = [
+      const contents: ChatMessage[] = [
         ...sanitizedHistory,
         {
           role: 'user',
@@ -449,7 +454,7 @@ async function startServer() {
                           },
                         },
                       })),
-                    },
+                    } as ChatMessage,
                   ],
                   config: {
                     systemInstruction,
